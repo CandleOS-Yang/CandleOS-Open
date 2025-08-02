@@ -1,14 +1,15 @@
-#include "../include/vbe.h"
-#include "../include/stdint.h"
+#include "vbe.h"
+#include "stdint.h"
+#include "printk.h"
+#include "debug.h"
 
 void kernel_main() {
     VbeModeInfo_t *mode_info = (VbeModeInfo_t*)VBE_MODE_INFO_BASE;
     
-    for (int y = 0; y < mode_info->y_resolution; y++) {
-        for (int x = 0; x < mode_info->x_resolution; x++) {
-            mode_info->frame_buffer[y * mode_info->x_resolution + x] = 0x00ff0000;
-        }
-    }
+    vbe_init(mode_info);
 
-    while(1);
+    uint32_t *p = 0xfd000000;
+    printk_color(0xffff0000, "Hello, World! p=%p\n", p);
+    // panic("This is a panic test p=%p\n", p);
+    assert(1 == 0);
 }

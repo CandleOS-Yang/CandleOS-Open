@@ -48,7 +48,9 @@
         "lib.h": "c",
         "menu.h": "c",
         "app.h": "c",
-        "api.h": "c"
+        "api.h": "c",
+        "vbe.h": "c",
+        "printk.h": "c"
     },
     "editor.accessibilityPageSize": 10,
     "Codegeex.RepoIndex": true,

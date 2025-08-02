@@ -5,10 +5,12 @@ build := ./build
 kernel := ./kernel
 include := ./include
 init := $(kernel)/init
+lib := $(kernel)/lib
 drv := $(kernel)/devices
+debug := $(kernel)/debug
 fonts := $(kernel)/fonts
 
-kernel_dirs := $(init)
+kernel_dirs := $(init) $(lib) $(debug)
 drv_dirs := $(drv)/vbe
 
 # ¹¤¾ß
@@ -62,6 +64,14 @@ $(build)/%.bin: $(loader)/%.asm
 	nasm -f bin $< -o $@
 
 $(build)/%.o: $(init)/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(debug)/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(lib)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
 
