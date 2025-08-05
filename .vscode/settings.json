@@ -50,7 +50,8 @@
         "app.h": "c",
         "api.h": "c",
         "vbe.h": "c",
-        "printk.h": "c"
+        "printk.h": "c",
+        "memory.h": "c"
     },
     "editor.accessibilityPageSize": 10,
     "Codegeex.RepoIndex": true,

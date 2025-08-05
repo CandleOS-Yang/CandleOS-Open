@@ -8,9 +8,10 @@ init := $(kernel)/init
 lib := $(kernel)/lib
 drv := $(kernel)/devices
 debug := $(kernel)/debug
+mem := $(kernel)/mem
 fonts := $(kernel)/fonts
 
-kernel_dirs := $(init) $(lib) $(debug)
+kernel_dirs := $(init) $(lib) $(debug) $(mem)
 drv_dirs := $(drv)/vbe
 
 # 工具
@@ -31,7 +32,7 @@ cflags += -msse2
 cflags += -masm=intel
 cflags += -I$(include)
 
-kernel_start := 0x10000
+kernel_start := 0x100000
 
 # 目标
 boot_bin := $(build)/boot.bin
@@ -68,6 +69,10 @@ $(build)/%.o: $(init)/%.c
 	gcc $(cflags) -c $< -o $@
 
 $(build)/%.o: $(debug)/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(mem)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
 

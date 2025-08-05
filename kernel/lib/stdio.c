@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "stdarg.h"
+#include "string.h"
 
 #define ZEROPAD 0x01 // ÃÓ≥‰¡„
 #define SIGN 0x02    // unsigned/signed long

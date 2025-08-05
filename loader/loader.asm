@@ -88,15 +88,16 @@ _GetVbeModes:
 
     .IsBpp32:
         cmp byte [es:di + 25],32
-        je .IsRes
+        ; je .IsRes
         je .SaveModeInfo
         jmp .GetNextMode
 
-    .IsRes:
-        cmp word [es:di + 18],1024
-        cmp word [es:di + 20],768
-        je .SaveModeInfo
-        jmp .GetNextMode
+    ; .IsRes:
+    ;     cmp word [es:di + 18],1024
+    ;     cmp word [es:di + 20],768
+    ;     je .SaveModeInfo
+    ;     jmp .GetNextMode
+    ; 这个似乎和_GetBiggestResolution有冲突
 
     .SaveModeInfo:
         xor eax,eax
@@ -424,13 +425,13 @@ Fat16FAT1Start: dw 0                                ; FAT1起始扇区号
 Fat16RootDirStart: dw 0                             ; 根目录起始扇区号
 Fat16DataStart: dw 0                                ; 数据区起始扇区号
 
-KERNEL_FAT16_NAME: db 'KERNEL  BIN'
-KERNEL_FAT16_NAME_LEN equ 11
-FAT16_DIR_FSTCLUS_OFFSET equ 26
-KERNEL_BASE equ 0x10000
+KERNEL_FAT16_NAME: db 'KERNEL  BIN'                 ; 内核文件名
+KERNEL_FAT16_NAME_LEN equ 11                        ; 内核文件名长度
+FAT16_DIR_FSTCLUS_OFFSET equ 26                     ; 目录项簇号偏移
+KERNEL_BASE equ 0x100000                            ; 内核加载地址
 
-CODE_SELECTOR equ (1 << 3)
-DATA_SELECTOR equ (2 << 3)
+CODE_SELECTOR equ (1 << 3)                          ; 代码段选择子
+DATA_SELECTOR equ (2 << 3)                          ; 数据段选择子
 
 LOADER_SECTOR_NUM equ 4                             ; Loader扇区数
 VBE_VERSION_2 equ 0x0200                            ; VBE版本号2.0

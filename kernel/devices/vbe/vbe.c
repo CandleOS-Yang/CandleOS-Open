@@ -1,11 +1,14 @@
 #include "stdint.h"
 #include "vbe.h"
+#include "stdio.h"
+#include "string.h"
+#include "stdarg.h"
 
 extern char kfont[4096];                // SongFonts字体库
 #define CHAR_HEIGHT 16                  // 字符高度
 #define CHAR_WIDTH 8                    // 字符宽度
-current_cursor_x;                       // 当前光标水平位置
-current_cursor_y;                       // 当前光标垂直位置
+uint32_t current_cursor_x;              // 当前光标水平位置
+uint32_t current_cursor_y;              // 当前光标垂直位置
 
 /* 清理屏幕 */
 void vbe_clear(VbeModeInfo_t *mode_info) {
@@ -71,7 +74,7 @@ void vbe_put_char(VbeModeInfo_t *mode_info, uint32_t color, char ch) {
 }
 
 /* 输出字符串 */
-void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t *color, char *str) {
+void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t color, char *str) {
     while (*str != EOS) {
         vbe_put_char(mode_info, color, *str);
         str++;

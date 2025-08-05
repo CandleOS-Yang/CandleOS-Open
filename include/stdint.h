@@ -34,4 +34,9 @@ typedef signed long long    int64_t;    // ÓÐ·ûºÅ - 8×Ö½Ú
 
 typedef uint32_t size_t;
 
+#define CEIL(n, m) (((n - 1) / m) + 1)
+#define CLAMP(value, min, max) ((value) < (min) ? (min) : ((value) > (max) ? (max) : (value)))
+#define MAX(x,y) ((x)<(y)?(y):(x))
+#define MIN(x,y) ((x)>(y)?(y):(x))
+
 #endif

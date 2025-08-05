@@ -18,7 +18,7 @@ void vbe_clear(VbeModeInfo_t *mode_info);
 void vbe_scroll(VbeModeInfo_t *mode_info);
 void vbe_draw_char(VbeModeInfo_t *mode_info, uint32_t x, uint32_t y, uint32_t color, char *ch);
 void vbe_put_char(VbeModeInfo_t *mode_info, uint32_t color, char ch);
-void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t *color, char *str);
+void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t color, char *str);
 void vbe_init(VbeModeInfo_t *mode_info);
 
 #endif
