@@ -19,11 +19,10 @@ void set_cr3(uint32_t pde_paddr) {
 }
 
 /* ¿ªÆô·ÖÒ³ */
-void enable_paging() {
+static inline enable_paging() {
     asm volatile (
         "mov eax, cr0\n"
         "or eax, 0x80000000\n"
-        "xchg bx,bx\n"
         "mov cr0, eax\n"
     );
 }
