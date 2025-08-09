@@ -4,17 +4,25 @@
 #include "stdint.h"
 #include "bitmap.h"
 
-#define MEM_INFO_BLOCK_BASE 0xA000       // 内存信息块基址
-#define PHYS_MAP_BASE 0x200000           // 物理页内存池位图基址
+// 地址
+#define KERNEL_VIRTUAL_BASE 0xC0000000       // 内核起始虚拟地址
+#define MEM_INFO_BLOCK_BASE 0xA000           // 内存信息块基址
+#define KERNEL_PAGE_DIR_BASE 0xFFFFF000      // 内核页目录虚拟地址
+#define LOW1MB_PAGE_TABLE_BASE 0xC0201000    // 低端1MB内存页表虚拟地址
+#define KERNEL_PAGE_TABLE_BASE 0xC0202000    // 内核页表虚拟地址
+#define FB_PAGE_TABLE_BASE 0xC0302000        // 显存页表虚拟地址
 
-#define ARDS_TYPE_AVAILABLE 1            // 可用内存
+// 大小
+#define PAGE_SIZE 4096                       // 页大小
+#define MB_SIZE (1024 * 1024)                // MB大小
+#define GB_SIZE (1024 * MB_SIZE)             // GB大小
 
-#define PAGE_SIZE 4096                   // 页大小
-#define MB_SIZE (1024 * 1024)            // MB大小
+// 数量
 
-#define KERNEL_PT_COUNTS 4               // 内核页表数量(4 * 4MB = 16MB)
-#define KERNEL_PDE_COUNTS 4              // 内核页目录项数量
+// 类型
+#define ARDS_TYPE_AVAILABLE 1                // 可用内存
 
+// 功能
 #define VADDR(pd_idx, pt_idx, off) (uint32_t)((pd_idx << 22) | (pt_idx << 12) | off)   // 获取虚拟地址
 
 typedef struct _packed {
@@ -32,11 +40,13 @@ typedef struct _packed {
 } MemoryInfo_t;
 
 typedef struct _packed {
+    uint32_t pool_base;                  // 内存池基址
     uint32_t pool_total_pages;           // 内存池总页数
     uint32_t pool_available_pages;       // 内存池可用页数
-    bitmap_t map;                        // 位图
-    uint32_t map_base;                   // 位图基址
-    uint32_t map_size;                   // 位图大小(Bytes)
+    uint32_t pool_map_base;              // 内存池位图基址
+    uint32_t pool_map_size;              // 内存池位图大小
+    uint32_t pool_map_pages;             // 内存池位图页数
+    bitmap_t pool_map;                   // 内存池位图
 } MemoryPool_t;
 
 typedef struct {

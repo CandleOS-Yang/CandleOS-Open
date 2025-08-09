@@ -305,8 +305,137 @@ _LoadKernelFile:
             cmp dx,0xfff8
             jb .ReadFile
 
+_SetPageTable:
+    ; 清空页表
+    mov esi,KERNEL_PAGE_TABLE_BASE
+    mov ecx,0x40400
+    .CleanPageTable:
+        mov dword [esi],0
+        add esi,4
+        loop .CleanPageTable
+
+    ; 低端1MB内存页表
+    mov esi,KERNEL_PAGE_TABLE_BASE
+    mov eax,0x00000000
+    mov ecx,256
+    mov ebx,0
+    .Low1MBPageTable:
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .Low1MBPageTable
+
+    ; 内核页表
+    mov esi,KERNEL_PAGE_TABLE_BASE
+    add esi,0x1000
+    mov eax,0x00100000
+    mov ecx,0x40000
+    mov ebx,0
+    .KernelPageTable:
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .KernelPageTable
+
+    mov eax,[VBE_MODE_XRESOLUTION]
+    mov ebx,[VBE_MODE_YRESOLUTION]
+    imul ebx
+    mov ecx,4
+    imul ecx
+    add eax,0xFFF
+    shr eax,12
+    mov [FBUsedPages],eax
+
+    ; 帧缓冲区页表
+    mov esi,KERNEL_PAGE_TABLE_BASE
+    add esi,0x100000
+    mov eax,0x00000000
+    mov ecx,[FBUsedPages]
+    mov ebx,0
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi + ebx * 4],eax
+    ; .FBPageTable:
+    ;     or eax,PG_P | PG_US_U | PG_RW_W
+    ;     mov [esi + ebx * 4],eax
+    ;     add eax,0x1000
+    ;     inc ebx
+    ;     loop .FBPageTable
+
+_SetPageDir:
+    ; 清空页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    mov ecx,1024
+    .CleanPageTable:
+        mov dword [esi],0
+        add esi,4
+        loop .CleanPageTable
+
+    ; 低端1MB内存页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    .Low1MBPageDirEntry:
+        mov eax,KERNEL_PAGE_TABLE_BASE
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi],eax
+
+    ; 内核页目录
+    add esi,0xC00
+    mov eax,KERNEL_PAGE_TABLE_BASE
+    add eax,0x1000
+    mov ecx,256
+    mov ebx,0
+    .KernelPageDirEntry:
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .KernelPageDirEntry
+
+    ; 页目录本身
+    add esi,0x3FC
+    .PageDirEntry:
+        mov eax,KERNEL_PAGE_DIR_BASE
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi],eax
+
+    mov eax,[FBUsedPages]
+    dec eax
+    mov ecx,1024
+    div ecx
+    inc eax
+    mov [FBPageTableCounts],eax
+
+    ; 帧缓冲区页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    mov eax,[VBE_MODE_FRAMEBUFFER]
+    shr eax,20  ; 页目录索引 * 4
+    add esi,eax
+    mov eax,KERNEL_PAGE_TABLE_BASE
+    add eax,0x100000
+    mov ebx,0
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi + ebx * 4],eax
+    ; mov ecx,[FBPageTableCounts]
+    ; .FBPageDirEntry:
+    ;     or eax,PG_P | PG_US_U | PG_RW_W
+    ;     mov [esi + ebx * 4],eax
+    ;     add eax,0x1000
+    ;     inc ebx
+    ;     loop .FBPageDirEntry
+
+_EnablePaging:
+    mov eax,KERNEL_PAGE_DIR_BASE
+    mov cr3,eax
+
+    mov eax,cr0
+    or eax,0x80000000
+    mov cr0,eax
+    xchg bx,bx
+
 _JmpToKernel:
-    jmp dword CODE_SELECTOR:KERNEL_BASE
+    jmp $
+    jmp dword CODE_SELECTOR:0xC0000000
     jmp $
 
 read_disk_pio:
@@ -420,7 +549,9 @@ set_cur:
 ArdsCount: dd 0                                     ; ARDS表数量
 LastModeBase: dw 0                                  ; 最后一个模式号信息基地址
 MaxResolutionModeBase: dw 0                         ; 最大分辨率模式
-MaxResolution: dd 0                                 ; 最大d分辨率
+MaxResolution: dd 0                                 ; 最大分辨率
+FBUsedPages: dd 0                                   ; 帧缓冲区占用页数
+FBPageTableCounts: dd 0                             ; 帧缓冲区页表数量
 Fat16FAT1Start: dw 0                                ; FAT1起始扇区号
 Fat16RootDirStart: dw 0                             ; 根目录起始扇区号
 Fat16DataStart: dw 0                                ; 数据区起始扇区号
@@ -430,8 +561,16 @@ KERNEL_FAT16_NAME_LEN equ 11                        ; 内核文件名长度
 FAT16_DIR_FSTCLUS_OFFSET equ 26                     ; 目录项簇号偏移
 KERNEL_BASE equ 0x100000                            ; 内核加载地址
 
+KERNEL_PAGE_DIR_BASE equ 0x200000                   ; 内核页目录物理地址
+LOW1MB_PAGE_TABLE_BASE equ 0x201000                 ; 低端1MB内存页表物理地址
+KERNEL_PAGE_TABLE_BASE equ 0x202000                 ; 内核页表物理地址
+
 CODE_SELECTOR equ (1 << 3)                          ; 代码段选择子
 DATA_SELECTOR equ (2 << 3)                          ; 数据段选择子
+
+PG_P equ 1b                                         ; 存在位
+PG_RW_W equ 10b                                     ; 写位
+PG_US_U equ 100b                                    ; 用户位
 
 LOADER_SECTOR_NUM equ 4                             ; Loader扇区数
 VBE_VERSION_2 equ 0x0200                            ; VBE版本号2.0
@@ -450,8 +589,8 @@ VBE_MODE_MODE equ VBE_MODE_INFO + 0x00              ; 模式号
 VBE_MODE_VERSION equ VBE_MODE_INFO + 0x02           ; VBE版本号
 VBE_MODE_BPP equ VBE_MODE_INFO + 0x04               ; 每像素占用位宽
 VBE_MODE_XRESOLUTION equ VBE_MODE_INFO + 0x06       ; 水平分辨率
-VBE_MODE_YRESOLUTION equ VBE_MODE_INFO + 0x08       ; 垂直分辨率
-VBE_MODE_FRAMEBUFFER equ VBE_MODE_INFO + 0x0a       ; 帧缓冲区基地址
+VBE_MODE_YRESOLUTION equ VBE_MODE_INFO + 0x0a       ; 垂直分辨率
+VBE_MODE_FRAMEBUFFER equ VBE_MODE_INFO + 0x0e       ; 帧缓冲区基地址
 
 _PartitionTable:
     .Part1Main:
