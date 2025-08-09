@@ -6,13 +6,9 @@
 #include "asm.h"
 
 void kernel_main() {
-    mem_init();
-    asm volatile ("xchg bx,bx");
-    while(1);
-    
-    // vbe_init(mode_info);
+    VbeModeInfo_t *mode_info = (VbeModeInfo_t *)VBE_MODE_INFO_BASE;
+    vbe_init(mode_info);
 
-    // printk("Jmp To High Kernel Success! EIP=0x%p\n", (uint32_t)get_eip());
-
+    printk("Jmp To Kernel Success!\n");
     while(1);
 }

@@ -85,5 +85,5 @@ void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t color, char *str) {
 void vbe_init(VbeModeInfo_t *mode_info) {
     current_cursor_x = 0;
     current_cursor_y = 0;
-    vbe_clear(mode_info);
+    // vbe_clear(mode_info);
 }

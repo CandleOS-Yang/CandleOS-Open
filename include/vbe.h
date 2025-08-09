@@ -9,8 +9,8 @@ typedef struct _packed {
     uint16_t mode;                       // 模式号
     uint16_t version;                    // VBE版本号
     uint16_t bpp;                        // 每像素占用位宽
-    uint16_t x_resolution;               // 水平分辨率
-    uint16_t y_resolution;               // 垂直分辨率
+    uint32_t x_resolution;               // 水平分辨率
+    uint32_t y_resolution;               // 垂直分辨率
     uint32_t *framebuffer;               // 帧缓冲区基地址
 } VbeModeInfo_t;
 

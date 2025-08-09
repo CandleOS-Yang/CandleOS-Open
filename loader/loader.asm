@@ -306,16 +306,8 @@ _LoadKernelFile:
             jb .ReadFile
 
 _SetPageTable:
-    ; 清空页表
-    mov esi,KERNEL_PAGE_TABLE_BASE
-    mov ecx,0x40400
-    .CleanPageTable:
-        mov dword [esi],0
-        add esi,4
-        loop .CleanPageTable
-
     ; 低端1MB内存页表
-    mov esi,KERNEL_PAGE_TABLE_BASE
+    mov esi,LOW1MB_PAGE_TABLE_BASE
     mov eax,0x00000000
     mov ecx,256
     mov ebx,0
@@ -328,9 +320,8 @@ _SetPageTable:
 
     ; 内核页表
     mov esi,KERNEL_PAGE_TABLE_BASE
-    add esi,0x1000
     mov eax,0x00100000
-    mov ecx,0x40000
+    mov ecx,1024
     mov ebx,0
     .KernelPageTable:
         or eax,PG_P | PG_US_U | PG_RW_W
@@ -338,7 +329,7 @@ _SetPageTable:
         add eax,0x1000
         inc ebx
         loop .KernelPageTable
-
+    
     mov eax,[VBE_MODE_XRESOLUTION]
     mov ebx,[VBE_MODE_YRESOLUTION]
     imul ebx
@@ -348,57 +339,6 @@ _SetPageTable:
     shr eax,12
     mov [FBUsedPages],eax
 
-    ; 帧缓冲区页表
-    mov esi,KERNEL_PAGE_TABLE_BASE
-    add esi,0x100000
-    mov eax,0x00000000
-    mov ecx,[FBUsedPages]
-    mov ebx,0
-    or eax,PG_P | PG_US_U | PG_RW_W
-    mov [esi + ebx * 4],eax
-    ; .FBPageTable:
-    ;     or eax,PG_P | PG_US_U | PG_RW_W
-    ;     mov [esi + ebx * 4],eax
-    ;     add eax,0x1000
-    ;     inc ebx
-    ;     loop .FBPageTable
-
-_SetPageDir:
-    ; 清空页目录
-    mov esi,KERNEL_PAGE_DIR_BASE
-    mov ecx,1024
-    .CleanPageTable:
-        mov dword [esi],0
-        add esi,4
-        loop .CleanPageTable
-
-    ; 低端1MB内存页目录
-    mov esi,KERNEL_PAGE_DIR_BASE
-    .Low1MBPageDirEntry:
-        mov eax,KERNEL_PAGE_TABLE_BASE
-        or eax,PG_P | PG_US_U | PG_RW_W
-        mov [esi],eax
-
-    ; 内核页目录
-    add esi,0xC00
-    mov eax,KERNEL_PAGE_TABLE_BASE
-    add eax,0x1000
-    mov ecx,256
-    mov ebx,0
-    .KernelPageDirEntry:
-        or eax,PG_P | PG_US_U | PG_RW_W
-        mov [esi + ebx * 4],eax
-        add eax,0x1000
-        inc ebx
-        loop .KernelPageDirEntry
-
-    ; 页目录本身
-    add esi,0x3FC
-    .PageDirEntry:
-        mov eax,KERNEL_PAGE_DIR_BASE
-        or eax,PG_P | PG_US_U | PG_RW_W
-        mov [esi],eax
-
     mov eax,[FBUsedPages]
     dec eax
     mov ecx,1024
@@ -406,23 +346,51 @@ _SetPageDir:
     inc eax
     mov [FBPageTableCounts],eax
 
-    ; 帧缓冲区页目录
-    mov esi,KERNEL_PAGE_DIR_BASE
+    ; 帧缓冲区页表
+    mov esi,FB_PAGE_TABLE_BASE
     mov eax,[VBE_MODE_FRAMEBUFFER]
-    shr eax,20  ; 页目录索引 * 4
-    add esi,eax
-    mov eax,KERNEL_PAGE_TABLE_BASE
-    add eax,0x100000
+    mov ecx,[FBUsedPages]
     mov ebx,0
     or eax,PG_P | PG_US_U | PG_RW_W
     mov [esi + ebx * 4],eax
-    ; mov ecx,[FBPageTableCounts]
-    ; .FBPageDirEntry:
-    ;     or eax,PG_P | PG_US_U | PG_RW_W
-    ;     mov [esi + ebx * 4],eax
-    ;     add eax,0x1000
-    ;     inc ebx
-    ;     loop .FBPageDirEntry
+    .FBPageTable:
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .FBPageTable
+
+_SetPageDir:
+    ; 低端1MB内存页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    mov eax,LOW1MB_PAGE_TABLE_BASE
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi],eax
+
+    ; 内核页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    add esi,0xC00
+    mov eax,KERNEL_PAGE_TABLE_BASE
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi],eax
+
+    ; 帧缓冲区页目录
+    mov esi,KERNEL_PAGE_DIR_BASE
+    mov eax,[VBE_MODE_FRAMEBUFFER]
+    shr eax,20
+    add esi,eax
+    mov eax,FB_PAGE_TABLE_BASE
+    mov ebx,0
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi + ebx * 4],eax
+
+    ; 页目录本身
+    mov esi,KERNEL_PAGE_DIR_BASE
+    add esi,0xFFC
+    .PageDirEntry:
+        mov eax,KERNEL_PAGE_DIR_BASE
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi],eax
 
 _EnablePaging:
     mov eax,KERNEL_PAGE_DIR_BASE
@@ -431,10 +399,8 @@ _EnablePaging:
     mov eax,cr0
     or eax,0x80000000
     mov cr0,eax
-    xchg bx,bx
 
 _JmpToKernel:
-    jmp $
     jmp dword CODE_SELECTOR:0xC0000000
     jmp $
 
@@ -564,6 +530,7 @@ KERNEL_BASE equ 0x100000                            ; 内核加载地址
 KERNEL_PAGE_DIR_BASE equ 0x200000                   ; 内核页目录物理地址
 LOW1MB_PAGE_TABLE_BASE equ 0x201000                 ; 低端1MB内存页表物理地址
 KERNEL_PAGE_TABLE_BASE equ 0x202000                 ; 内核页表物理地址
+FB_PAGE_TABLE_BASE equ 0x302000                     ; 帧缓冲区页表物理地址
 
 CODE_SELECTOR equ (1 << 3)                          ; 代码段选择子
 DATA_SELECTOR equ (2 << 3)                          ; 数据段选择子
