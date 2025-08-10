@@ -9,6 +9,6 @@ void kernel_main() {
     VbeModeInfo_t *mode_info = (VbeModeInfo_t *)VBE_MODE_INFO_BASE;
     vbe_init(mode_info);
 
-    printk("Jmp To Kernel Success!\n");
+    mem_init();
     while(1);
 }

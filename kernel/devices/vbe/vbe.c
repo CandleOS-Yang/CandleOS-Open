@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "stdarg.h"
+#include "printk.h"
 
 extern char kfont[4096];                // SongFonts×ÖÌå¿â
 #define CHAR_HEIGHT 16                  // ×Ö·û¸ß¶È
@@ -85,5 +86,10 @@ void vbe_put_string(VbeModeInfo_t *mode_info, uint32_t color, char *str) {
 void vbe_init(VbeModeInfo_t *mode_info) {
     current_cursor_x = 0;
     current_cursor_y = 0;
-    // vbe_clear(mode_info);
+    vbe_clear(mode_info);
+
+    printk("VBE Mode Info:\n==> FrameBuffer: 0x%p  X Resolution: %d  Y Resolution: %d\n",
+        mode_info->framebuffer,
+        mode_info->x_resolution,
+        mode_info->y_resolution);
 }

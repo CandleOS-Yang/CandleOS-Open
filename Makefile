@@ -33,7 +33,7 @@ cflags += -msse2
 cflags += -masm=intel
 cflags += -I$(include)
 
-kernel_start := 0xC0000000
+kernel_start := 0xC0100000
 
 # Ä¿±ê
 boot_bin := $(build)/boot.bin

@@ -5,15 +5,11 @@
 #include "vbe.h"
 #include "string.h"
 
-/*
-在loader开启分页
-内核映射0xC0000000，大小1GB
-*/
+MemoryInfo_t mem_info;                      // 内存信息
+MemoryPool_t phys_pool;                     // 物理页内存池
+MemoryPool_t kernel_pool;                   // 内核虚拟页内存池
 
-MemoryInfo_t mem_info;                          // 内存信息
-MemoryPool_t phys_pool;                  // 物理页内存池
-MemoryPool_t kernel_pool;               // 内核虚拟页内存池
-
+// 功能型函数
 /* 获取内存信息 */
 void get_mem_info(void *ards) {
     uint32_t ards_counts = *(uint32_t *)ards;
@@ -45,7 +41,7 @@ void get_mem_info(void *ards) {
 }
 
 /* 获取虚拟地址信息 */
-void get_vaddr_info(void *vaddr, vaddr_info_t *vaddr_info) {
+void get_vaddr_info(vaddr_info_t *vaddr_info, void *vaddr) {
     uint32_t ptr = (uint32_t)vaddr;
 
     vaddr_info->page_dir_idx = (ptr >> 22) & 0x3ff;
@@ -53,13 +49,8 @@ void get_vaddr_info(void *vaddr, vaddr_info_t *vaddr_info) {
     vaddr_info->page_offset = ptr & 0xfff;
 }
 
-/* 内存池初始化 */
-void mem_pool_init() {
-    
-}
-
 /* 项初始化 */
-static void entry_init(entry_t *entry, uint32_t index)
+void entry_init(entry_t *entry, uint32_t index)
 {
     *(uint32_t *)entry = 0;
     entry->present = 1;
@@ -68,41 +59,46 @@ static void entry_init(entry_t *entry, uint32_t index)
     entry->index = index;
 }
 
-/* 内存映射 */
-void mem_map() {
-    VbeModeInfo_t *mode_info = (VbeModeInfo_t*)VBE_MODE_INFO_BASE;
-    uint32_t fb_size = mode_info->x_resolution * mode_info->y_resolution * 4;
-    uint32_t fb_used_pages = CEIL(fb_size, PAGE_SIZE);
-    uint32_t fb_pde_idx = (uint32_t)mode_info->framebuffer >> 22;
-    uint32_t fb_pt_counts = CEIL(fb_used_pages, 1024);
-    
-    uint32_t fb_paddr_idx = (uint32_t)mode_info->framebuffer >> 12;
-    page_dir_entry_t *fb_pde = (page_dir_entry_t *)(KERNEL_PAGE_DIR_BASE + fb_pde_idx * 4);
-    page_table_entry_t *fb_pt = (page_table_entry_t *)FB_PAGE_TABLE_BASE;
+/* 映射一页内存 */
+void map_a_page(void *vaddr, void *paddr) {
+    vaddr_info_t vaddr_info;
+    get_vaddr_info(&vaddr_info, vaddr);
 
-    for (int pde_idx = fb_pde_idx; pde_idx < fb_pde_idx + fb_pt_counts; pde_idx++) {
-        page_dir_entry_t *fb_pde = (page_dir_entry_t *)(KERNEL_PAGE_DIR_BASE + fb_pde_idx * 4);
-        page_table_entry_t *fb_pt = FB_PAGE_TABLE_BASE + pde_idx * 1024;
-
-        memset((void *)fb_pt, 0, PAGE_SIZE);
-        entry_init(fb_pde, (uint32_t)fb_pt >> 12);
-
-        for (int pte_idx = 0; pte_idx < 1024; pte_idx++, fb_paddr_idx++) {
-            entry_init(&fb_pt[pte_idx], fb_paddr_idx);
-        }
+    page_dir_entry_t *pde = (page_dir_entry_t *)(KERNEL_PAGE_DIR_BASE + vaddr_info.page_dir_idx * 4);
+    page_table_entry_t *pt = (page_table_entry_t *)(KERNEL_PAGE_TABLE_BASE + vaddr_info.page_dir_idx * PAGE_SIZE);
+    if (pde->present == 0) {
+        memset(pt, 0, PAGE_SIZE);
+        entry_init(pde, ((uint32_t)pt - KERNEL_VIRTUAL_BASE) >> 12);
     }
 
-    asm volatile ("xchg bx,bx");
-    printk("Paging Mode Is Now Enabled.\n");
+    page_table_entry_t *pte = (page_table_entry_t *)((uint32_t)pt + vaddr_info.page_table_idx * 4);
+    if (pte->present == 0) {
+        entry_init(pte, (uint32_t)paddr >> 12);
+    }
 }
 
 
+
+// 具体函数
+/* 内存池初始化 */
+void mem_pool_init() {
+    phys_pool.pool_base = (void *)mem_info.available_base;
+    phys_pool.pool_total_pages = mem_info.available_pages;
+    phys_pool.pool_available_pages = mem_info.available_pages;
+    phys_pool.pool_map_base = PHYS_MAP_BASE;
+}
+
 /* 内存管理初始化 */
 void mem_init() {
-    mem_map();
-    asm volatile ("xchg bx,bx");
-
     get_mem_info((void *)MEM_INFO_BLOCK_BASE);
 
-    printk("Hello\n");
+    asm volatile ("xchg bx,bx");
+    uint32_t *p = 0x500000;
+
+    asm volatile ("xchg bx,bx");
+    map_a_page(p, 0x10000);
+    asm volatile ("xchg bx,bx");
+
+    *p = 0xfd000000;
+    asm volatile ("xchg bx,bx");
 }

@@ -6,7 +6,11 @@
 
 // 地址
 #define KERNEL_VIRTUAL_BASE 0xC0000000       // 内核起始虚拟地址
-#define MEM_INFO_BLOCK_BASE 0xA000           // 内存信息块基址
+#define MEM_INFO_BLOCK_BASE 0xC000A000       // 内存信息块基址
+
+#define PHYS_MAP_BASE 0xC0310000             // 物理内存池位图基址
+
+
 #define KERNEL_PAGE_DIR_BASE 0xFFFFF000      // 内核页目录虚拟地址
 #define LOW1MB_PAGE_TABLE_BASE 0xC0201000    // 低端1MB内存页表虚拟地址
 #define KERNEL_PAGE_TABLE_BASE 0xC0202000    // 内核页表虚拟地址

@@ -134,30 +134,29 @@ _GetVbeModes:
         call print
 
 _GetBiggestResolution:
-    mov bx,VBE_MODE_LIST
+    mov si,VBE_MODE_LIST
     mov ax,0
     mov fs,ax
-    xor cx,cx
     
     .Loops:
-        mov ax,[fs:bx + 3]
-        mov dx,[fs:bx + 5]
-        mul dx
-        
-        cmp dx,cx
-        jb .NextMode
+        mov ax,[fs:si + 3]
+        mov bx,[fs:si + 5]
+        mul bx
+
+        cmp dx,[MaxResolution + 2]
         ja .UpdateMaxResolution
+        jb .NextMode
         cmp ax,[MaxResolution]
         jbe .NextMode
 
     .UpdateMaxResolution:
         mov [MaxResolution],ax
-        mov cx,dx
-        mov [MaxResolutionModeBase],bx
+        mov [MaxResolution + 2],dx
+        mov [MaxResolutionModeBase],si
 
     .NextMode:
-        add bx,11
-        cmp bx,[LastModeBase]
+        add si,11
+        cmp si,[LastModeBase]
         jbe .Loops
 
 _SetVbeResolution:
@@ -320,7 +319,7 @@ _SetPageTable:
 
     ; 内核页表
     mov esi,KERNEL_PAGE_TABLE_BASE
-    mov eax,0x00100000
+    mov eax,0x00000000
     mov ecx,1024
     mov ebx,0
     .KernelPageTable:
@@ -381,8 +380,13 @@ _SetPageDir:
     add esi,eax
     mov eax,FB_PAGE_TABLE_BASE
     mov ebx,0
-    or eax,PG_P | PG_US_U | PG_RW_W
-    mov [esi + ebx * 4],eax
+    mov ecx,[FBPageTableCounts]
+    .FBPageDirEntry
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .FBPageDirEntry
 
     ; 页目录本身
     mov esi,KERNEL_PAGE_DIR_BASE
@@ -401,7 +405,7 @@ _EnablePaging:
     mov cr0,eax
 
 _JmpToKernel:
-    jmp dword CODE_SELECTOR:0xC0000000
+    jmp dword CODE_SELECTOR:0xC0100000
     jmp $
 
 read_disk_pio:
