@@ -7,6 +7,7 @@
 /* ¶ÏÑÔÊ§°Ü´¦Àí */
 void assert_fail(const char *exp, const char *file, int line) {
     printk_color(0xffff0000, "!!! Assertion failed: %s\n==> file: %s, line: %d\n", exp, file, line);
+    while(1);
 }
 
 /* PANIC */

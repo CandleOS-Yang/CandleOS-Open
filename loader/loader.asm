@@ -319,8 +319,8 @@ _SetPageTable:
 
     ; ÄÚºËÒ³±í
     mov esi,KERNEL_PAGE_TABLE_BASE
-    mov eax,0x00000000
-    mov ecx,1024
+    mov eax,0x00100000
+    mov ecx,0x2000
     mov ebx,0
     .KernelPageTable:
         or eax,PG_P | PG_US_U | PG_RW_W
@@ -370,8 +370,14 @@ _SetPageDir:
     mov esi,KERNEL_PAGE_DIR_BASE
     add esi,0xC00
     mov eax,KERNEL_PAGE_TABLE_BASE
-    or eax,PG_P | PG_US_U | PG_RW_W
-    mov [esi],eax
+    mov ecx,8
+    mov ebx,0
+    .KernelPageDirEntry:
+        or eax,PG_P | PG_US_U | PG_RW_W
+        mov [esi + ebx * 4],eax
+        add eax,0x1000
+        inc ebx
+        loop .KernelPageDirEntry
 
     ; Ö¡»º³åÇøÒ³Ä¿Â¼
     mov esi,KERNEL_PAGE_DIR_BASE
@@ -403,9 +409,10 @@ _EnablePaging:
     mov eax,cr0
     or eax,0x80000000
     mov cr0,eax
+    xchg bx,bx
 
 _JmpToKernel:
-    jmp dword CODE_SELECTOR:0xC0100000
+    jmp dword CODE_SELECTOR:0xC0000000
     jmp $
 
 read_disk_pio:

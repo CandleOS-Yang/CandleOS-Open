@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-#define VBE_MODE_INFO_BASE 0xC000A200    // VBE模式信息基地址
+#define VBE_MODE_INFO_BASE 0xA200        // VBE模式信息基地址
 
 typedef struct _packed {
     uint16_t mode;                       // 模式号
