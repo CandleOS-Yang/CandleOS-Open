@@ -5,18 +5,18 @@
 #include "bitmap.h"
 
 // 地址
-#define KERNEL_VIRTUAL_BASE 0xC0000000       // 内核起始虚拟地址
+#define KERNEL_VADDR 0xC0000000              // 内核起始虚拟地址
 #define MEM_INFO_BLOCK_BASE 0xA000           // 内存信息块基址
 
-#define KERNEL_PAGE_DIR_BASE 0xFFFFF000      // 内核页目录虚拟地址
-#define LOW1MB_PAGE_TABLE_BASE 0xC0101000    // 低端1MB内存页表虚拟地址
-#define KERNEL_PAGE_TABLE_BASE 0xC0102000    // 内核页表虚拟地址
-#define FB_PAGE_TABLE_BASE 0xC0202000        // 显存页表虚拟地址
+#define KERNEL_PAGE_DIR_VADDR 0xFFFFF000     // 内核页目录虚拟地址
+#define LOW1MB_PAGE_TABLE_VADDR 0xC0101000   // 低端1MB内存页表虚拟地址
+#define KERNEL_PAGE_TABLE_VADDR 0xC0102000   // 内核页表虚拟地址
 
 // 大小
 #define PAGE_SIZE 4096                       // 页大小
 #define MB_SIZE (1024 * 1024)                // MB大小
 #define GB_SIZE (1024 * MB_SIZE)             // GB大小
+#define KERNEL_RESERVED_SIZE (36 * MB_SIZE)  // 内核保留区大小
 
 // 数量
 
@@ -25,6 +25,7 @@
 
 // 功能
 #define VADDR(pd_idx, pt_idx, off) (uint32_t)((pd_idx << 22) | (pt_idx << 12) | off)   // 获取虚拟地址
+#define KERNEL_PADDR(p) (uint32_t)((uint32_t)p - KERNEL_VADDR + 0x100000)              // 获取内核虚拟地址对应的物理地址
 
 typedef struct _packed {
     uint64_t base;                       // 基址
@@ -32,7 +33,7 @@ typedef struct _packed {
     uint32_t type;                       // 类型
 } Ards_t;
 
-typedef struct _packed {
+typedef struct {
     uint32_t total_size;                 // 总大小(Bytes)
     uint32_t total_pages;                // 总页数
     uint32_t available_base;             // 可用内存基址
@@ -40,7 +41,7 @@ typedef struct _packed {
     uint32_t available_pages;            // 可用页数
 } MemoryInfo_t;
 
-typedef struct _packed {
+typedef struct {
     uint32_t pool_base;                  // 内存池基址
     uint32_t pool_total_pages;           // 内存池总页数
     uint32_t pool_available_pages;       // 内存池可用页数
@@ -72,5 +73,17 @@ typedef struct _packed {
 
 typedef entry_t page_table_entry_t;      // 页表项
 typedef entry_t page_dir_entry_t;        // 页目录项
+
+void get_mem_info(void *ards);
+void get_vaddr_info(vaddr_info_t *vaddr_info, void *vaddr);
+void entry_init(entry_t *entry, uint32_t index);
+void map_a_page(void *vaddr, void *paddr);
+void *alloc_phys_pages(uint32_t count);
+void free_phys_pages(void *paddr, uint32_t count);
+void *alloc_kernel_pages(uint32_t count);
+void free_kernel_pages(void *vaddr, uint32_t count);
+void mem_mapping();
+void mem_pool_init();
+void mem_init();
 
 #endif

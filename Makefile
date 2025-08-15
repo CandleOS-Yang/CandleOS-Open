@@ -12,7 +12,7 @@ mem := $(kernel)/mem
 asm := $(kernel)/asm
 fonts := $(kernel)/fonts
 
-kernel_dirs := $(init) $(lib) $(debug) $(mem) $(asm)
+kernel_dirs := $(init) $(lib) $(debug) $(mem)
 drv_dirs := $(drv)/vbe
 
 # ¹¤¾ß
@@ -80,10 +80,6 @@ $(build)/%.o: $(mem)/%.c
 $(build)/%.o: $(lib)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
-
-$(build)/%.o: $(asm)/%.asm
-	$(shell mkdir -p $(dir $@))
-	nasm -f elf32 -g $< -o $@
 
 $(build)/%.o: $(drv)/vbe/%.c
 	$(shell mkdir -p $(dir $@))

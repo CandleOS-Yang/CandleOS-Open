@@ -320,7 +320,7 @@ _SetPageTable:
     ; 内核页表
     mov esi,KERNEL_PAGE_TABLE_BASE
     mov eax,0x00100000
-    mov ecx,0x2000
+    mov ecx,0x1000
     mov ebx,0
     .KernelPageTable:
         or eax,PG_P | PG_US_U | PG_RW_W
@@ -350,8 +350,6 @@ _SetPageTable:
     mov eax,[VBE_MODE_FRAMEBUFFER]
     mov ecx,[FBUsedPages]
     mov ebx,0
-    or eax,PG_P | PG_US_U | PG_RW_W
-    mov [esi + ebx * 4],eax
     .FBPageTable:
         or eax,PG_P | PG_US_U | PG_RW_W
         mov [esi + ebx * 4],eax
@@ -360,6 +358,11 @@ _SetPageTable:
         loop .FBPageTable
 
 _SetPageDir:
+    mov edi, KERNEL_PAGE_DIR_BASE
+    mov ecx, 1024
+    xor eax, eax
+    rep stosd
+    
     ; 低端1MB内存页目录
     mov esi,KERNEL_PAGE_DIR_BASE
     mov eax,LOW1MB_PAGE_TABLE_BASE
@@ -370,7 +373,7 @@ _SetPageDir:
     mov esi,KERNEL_PAGE_DIR_BASE
     add esi,0xC00
     mov eax,KERNEL_PAGE_TABLE_BASE
-    mov ecx,8
+    mov ecx,2
     mov ebx,0
     .KernelPageDirEntry:
         or eax,PG_P | PG_US_U | PG_RW_W
@@ -397,10 +400,9 @@ _SetPageDir:
     ; 页目录本身
     mov esi,KERNEL_PAGE_DIR_BASE
     add esi,0xFFC
-    .PageDirEntry:
-        mov eax,KERNEL_PAGE_DIR_BASE
-        or eax,PG_P | PG_US_U | PG_RW_W
-        mov [esi],eax
+    mov eax,KERNEL_PAGE_DIR_BASE
+    or eax,PG_P | PG_US_U | PG_RW_W
+    mov [esi],eax
 
 _EnablePaging:
     mov eax,KERNEL_PAGE_DIR_BASE
@@ -409,7 +411,6 @@ _EnablePaging:
     mov eax,cr0
     or eax,0x80000000
     mov cr0,eax
-    xchg bx,bx
 
 _JmpToKernel:
     jmp dword CODE_SELECTOR:0xC0000000
