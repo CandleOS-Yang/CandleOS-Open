@@ -25,7 +25,6 @@ typedef struct {
     bool is_large;                      // 是否是大块内存(0：小块  1：大块)
 } arena_t;
 
-
 void mem_block_list_init(mem_block_list_t *list);
 void add_mem_block(mem_block_list_t *list, mem_block_t *block);
 void remove_mem_block(mem_block_list_t *list, mem_block_t *block);

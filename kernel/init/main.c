@@ -11,14 +11,8 @@ void kernel_main() {
 
     mem_init();
     heap_init();
+    asm ("xchg bx,bx");
+    gdt_init();
 
-    void *p1 = kmalloc(16);
-    void *p2 = kmalloc(68);
-    void *p3 = kmalloc(2048);
-
-    printk("p1: %p\n", p1);
-    printk("p2: %p\n", p2);
-    printk("p3: %p\n", p3);
-    
     while(1);
 }

@@ -9,10 +9,12 @@ lib := $(kernel)/lib
 drv := $(kernel)/devices
 debug := $(kernel)/debug
 mem := $(kernel)/mem
+gdt := $(kernel)/gdt
+int := $(kernel)/interrupt
 asm := $(kernel)/asm
 fonts := $(kernel)/fonts
 
-kernel_dirs := $(init) $(lib) $(debug) $(mem)
+kernel_dirs := $(init) $(lib) $(debug) $(mem) $(gdt) $(int)
 drv_dirs := $(drv)/vbe
 
 # ¹¤¾ß
@@ -74,6 +76,14 @@ $(build)/%.o: $(debug)/%.c
 	gcc $(cflags) -c $< -o $@
 
 $(build)/%.o: $(mem)/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(gdt)/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(int)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
 
