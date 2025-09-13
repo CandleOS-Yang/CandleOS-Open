@@ -14,5 +14,6 @@ void kernel_main() {
     asm ("xchg bx,bx");
     gdt_init();
 
+    // test
     while(1);
 }
