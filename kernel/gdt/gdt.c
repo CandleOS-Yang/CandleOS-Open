@@ -22,23 +22,23 @@ void gdt_init() {
     gdt_entry_t *code = &gdt[KERNEL_CODE_IDX];
     gdt_entry_init(code, 0, 0xFFFFF);
     code->type = 0b1010;
-    code->segment_type = 1;
-    code->granularity = 1;
+    code->S = 1;
+    code->G = 1;
     code->DPL = 0;
     code->present = 1;
     code->long_mode = 0;
-    code->operation_size = 1;
+    code->D_B = 1;
 
     // ÄÚºËÊý¾Ý¶ÎÃèÊö·û
     gdt_entry_t *data = &gdt[KERNEL_DATA_IDX];
     gdt_entry_init(data, 0, 0xFFFFF);
     data->type = 0b0010;
-    data->segment_type = 1;
-    data->granularity = 1;
+    data->S = 1;
+    data->G = 1;
     data->DPL = 0;
     data->present = 1;
     data->long_mode = 0;
-    data->operation_size = 1;
+    data->D_B = 1;
 
     gdt_ptr.limit = sizeof(gdt) - 1;
     gdt_ptr.base = (uint32_t)gdt;

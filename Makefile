@@ -15,7 +15,7 @@ asm := $(kernel)/asm
 fonts := $(kernel)/fonts
 
 kernel_dirs := $(init) $(lib) $(debug) $(mem) $(gdt) $(int)
-drv_dirs := $(drv)/vbe
+drv_dirs := $(drv)/vbe $(drv)/io $(drv)/pic $(drv)/keyboard $(drv)/mouse
 
 # ¹¤¾ß
 fd := ./tools/fd
@@ -86,12 +86,31 @@ $(build)/%.o: $(gdt)/%.c
 $(build)/%.o: $(int)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
+$(build)/%.o: $(int)/%.asm
+	$(shell mkdir -p $(dir $@))
+	nasm -f elf32 $< -o $@
 
 $(build)/%.o: $(lib)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
 
 $(build)/%.o: $(drv)/vbe/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(drv)/io/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(drv)/pic/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(drv)/mouse/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(cflags) -c $< -o $@
+
+$(build)/%.o: $(drv)/keyboard/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(cflags) -c $< -o $@
 

@@ -51,7 +51,9 @@
         "api.h": "c",
         "vbe.h": "c",
         "printk.h": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "debug.h": "c",
+        "interrupt.h": "c"
     },
     "editor.accessibilityPageSize": 10,
     "Codegeex.RepoIndex": true,

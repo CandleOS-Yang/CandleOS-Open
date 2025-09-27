@@ -22,14 +22,14 @@ typedef struct _packed {
     uint16_t limit_low;                 // 段界限低位 (0~15位)
     uint32_t base_low : 24;             // 基地址低位 (0~23位)
     uint8_t type : 4;                   // 段类型
-    uint8_t segment_type : 1;           // 系统段/代码数据段标志
+    uint8_t S : 1;                      // 系统段/代码数据段标志
     uint8_t DPL : 2;                    // 描述符特权级
     uint8_t present : 1;                // 存在标志位
     uint8_t limit_high : 4;             // 段界限高位 (16~19位)
     uint8_t available : 1;              // 可用位
     uint8_t long_mode : 1;              // 64位扩展标志
-    uint8_t operation_size : 1;         // 32位/16位操作尺寸
-    uint8_t granularity : 1;            // 段界限粒度
+    uint8_t D_B : 1;                    // 32位/16位操作尺寸
+    uint8_t G : 1;                      // 段界限粒度
     uint8_t base_high;                  // 基地址高位 (24~31位)
 } gdt_entry_t;
 
