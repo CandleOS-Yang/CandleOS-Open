@@ -117,7 +117,7 @@ bool capslock_on;
 bool numlock_on;
 
 /* 获取扫描码对应ASCII */
-uint8_t scan_code_to_ascii(uint8_t scan_code) {
+uint8_t scancode_to_ascii(uint8_t scan_code) {
     if (scan_code & 0x80) {
         scan_code &= 0x7F;
 
@@ -175,22 +175,31 @@ uint8_t scan_code_to_ascii(uint8_t scan_code) {
     return keyboard_map[map_idx][scan_code];
 }
 
+/* 等待键盘控制器响应 */
+void wait_keyboard_ready() {
+    while (true) {
+        if ((inb(PS2_STATUS_PORT) & 0x02) == 0) {
+            break;
+        }
+    }
+}
+
 /* 读取键盘LED状态 */
 uint8_t read_keyboard_leds() {
     uint8_t status;
-    
-    while (inb(0x64) & 0x02);
-    outb(0x60, 0xED);
 
-    while (!(inb(0x64) & 0x01));
-    status = inb(0x60);
+    wait_keyboard_ready();
+    outb(PS2_DATA_PORT, PS2_SET_LEDS);
+
+    wait_keyboard_ready();
+    status = inb(PS2_DATA_PORT);
     return status;
 }
 
 /* 键盘ISR处理函数 */
 void keyboard_isr_handler(uint32_t vector) {
-    uint8_t scan_code = inb(0x60);
-    uint8_t ascii = scan_code_to_ascii(scan_code);
+    uint8_t scan_code = inb(PS2_DATA_PORT);
+    uint8_t ascii = scancode_to_ascii(scan_code);
 
     printk("%c", ascii);
     send_eoi(vector);
@@ -200,6 +209,10 @@ void keyboard_isr_handler(uint32_t vector) {
 void keyboard_init() {
     /*
     所有的0x60这些端口号和命令要改成宏定义
+
+    加函数声明
+
+    点击用户窗口，并输入A后，键盘中断触发，发送键盘输入消息(包含ascii码，当前任务的id)，到了主循环，获取这个消息后不处理，根据里面的任务id，把这个消息发送到应用的消息列表（app在创建时，系统会分配一个列表，并记录，因此可以找到对应的列表），app的循环自己解析键盘消息
     */
     set_isr_handler(0x21, (uint32_t)keyboard_isr_handler);
     uint8_t status = read_keyboard_leds();
@@ -209,7 +222,7 @@ void keyboard_init() {
     ctrl_pressed = false;
 
     enable_int_bit(0x21);
-
-    printk("Keynboard Info\n==> NumLock: %d   CapsLock: %d\n", numlock_on, capslock_on);
-    printk("Now you can input:\n");
+    
+    // printk("Keynboard Info\n==> NumLock: %d   CapsLock: %d\n", numlock_on, capslock_on);
+    // printk("Now you can input:\n");
 }

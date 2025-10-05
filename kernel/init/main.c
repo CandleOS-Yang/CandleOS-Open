@@ -10,6 +10,8 @@
 #include "keyboard.h"
 #include "mouse.h"
 
+mouse_info_t mouse_info;        //  Û±Í–≈œ¢
+
 void kernel_main() {
     VbeModeInfo_t *mode_info = (VbeModeInfo_t *)VBE_MODE_INFO_BASE;
     vbe_init(mode_info);
@@ -20,6 +22,7 @@ void kernel_main() {
     idt_init();
     pic_init();
     keyboard_init();
+    mouse_init(&mouse_info);
 
 
     while(1);

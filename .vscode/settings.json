@@ -53,7 +53,9 @@
         "printk.h": "c",
         "memory.h": "c",
         "debug.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "mouse.h": "c",
+        "idt.h": "c"
     },
     "editor.accessibilityPageSize": 10,
     "Codegeex.RepoIndex": true,
