@@ -55,7 +55,8 @@
         "debug.h": "c",
         "interrupt.h": "c",
         "mouse.h": "c",
-        "idt.h": "c"
+        "idt.h": "c",
+        "heap.h": "c"
     },
     "editor.accessibilityPageSize": 10,
     "Codegeex.RepoIndex": true,

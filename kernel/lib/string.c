@@ -1,5 +1,9 @@
 #include "stdint.h"
 
+typedef struct __m128i {
+    long long int m128i_i64[2];
+} __m128i;
+
 int8_t *strcpy(int8_t *dest, const int8_t *src)
 {
     int8_t *ptr = dest;
@@ -138,6 +142,29 @@ void *memcpy(void *dest, const void *src, size_t count)
         *ptr++ = *((int8_t *)(src++));
     }
     return dest;
+}
+
+
+/* 32×Ö½Ú»ã±à°æmemset */
+void memset32_asm(uint32_t* dest, uint32_t value, uint32_t count) {
+    __asm__ volatile (
+        "cld\n"
+        "rep stosd\n"
+        : 
+        : "D"(dest), "a"(value), "c"(count)
+        : "memory"
+    );
+}
+
+/* 32×Ö½Ú»ã±à°æmemcpy */
+void memcpy32_asm(uint32_t* dest, const uint32_t* src, uint32_t count) {
+    __asm__ volatile (
+        "cld\n"
+        "rep movsd\n"
+        : 
+        : "D"(dest), "S"(src), "c"(count)
+        : "memory"
+    );
 }
 
 void *memchr(const void *str, int ch, size_t count)

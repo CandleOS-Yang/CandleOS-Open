@@ -4,6 +4,7 @@
 #include "string.h"
 #include "stdarg.h"
 #include "printk.h"
+#include "string.h"
 
 extern char kfont[4096];                // SongFonts×ÖÌå¿â
 #define CHAR_HEIGHT 16                  // ×Ö·û¸ß¶È
@@ -25,11 +26,47 @@ void vbe_scroll(VbeModeInfo_t *mode_info) {
         void *src = (void *)&mode_info->framebuffer[CHAR_HEIGHT * mode_info->x_resolution];
         void *dst = (void *)mode_info->framebuffer;
         uint32_t scroll_size = mode_info->x_resolution * (mode_info->y_resolution - CHAR_HEIGHT) * 4;
-        memcpy(dst, src, scroll_size);
+
+        // memcpy(dst, src, scroll_size);
+
+        for (uint32_t i = 0; i < scroll_size; i += 64) {
+            asm volatile (
+                "movdqu xmm0,[%0]\n"
+                "movdqu xmm1,[%0 + 16]\n"
+                "movdqu xmm2,[%0 + 32]\n"
+                "movdqu xmm3,[%0 + 48]\n"
+                
+                "movdqu [%1],xmm0\n"
+                "movdqu [%1 + 16],xmm1\n"
+                "movdqu [%1 + 32],xmm2\n"
+                "movdqu [%1 + 48],xmm3\n"
+                : 
+                : "r" (src + i), "r"(dst + i)
+                : "xmm0", "xmm1", "xmm2", "xmm3", "memory"
+            );
+        }
 
         void *clear_src = (void *)dst + scroll_size;
         uint32_t clear_size = mode_info->x_resolution * CHAR_HEIGHT * 4;
-        memset(clear_src, 0xff000000, clear_size);
+
+        // memset(clear_src, 0, clear_size);
+
+        asm volatile(
+            "pxor xmm0, xmm0\n"
+            "pxor xmm1, xmm1\n"
+            "pxor xmm2, xmm2\n"
+            "pxor xmm3, xmm3\n"
+        );
+        for (uint32_t i = 0; i < clear_size; i += 64) {
+            asm volatile (
+                "movdqu [%0],xmm0\n"
+                "movdqu [%0 + 16],xmm1\n"
+                "movdqu [%0 + 32],xmm2\n"
+                "movdqu [%0 + 48],xmm3\n"
+                : 
+                : "r" (clear_src + i)
+            );
+        }
     
         current_cursor_y = mode_info->y_resolution / CHAR_HEIGHT - 1;
     }

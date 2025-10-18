@@ -18,5 +18,7 @@ void *memset(void *dest, int ch, size_t count);
 void *memcpy(void *dest, const void *src, size_t count);
 void *memchr(const void *ptr, int ch, size_t count);
 char* strupr(char* src);
+void memset32_asm(uint32_t* dest, uint32_t value, uint32_t count);
+void memcpy32_asm(uint32_t* dest, const uint32_t* src, uint32_t count);
 
 #endif

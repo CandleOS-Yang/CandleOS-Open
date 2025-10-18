@@ -5,6 +5,7 @@
 #include "gdt.h"
 #include "pic.h"
 #include "interrupt.h"
+#include "string.h"
 
 idt_ptr_t idt_ptr;                                      // IDT÷∏’Î
 gate_descriptor_t idt[IDT_ENTRY_COUNT];                 // IDT
